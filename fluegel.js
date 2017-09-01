@@ -243,55 +243,66 @@
 	}
 
 	function init(el, config, docText){
-		el.addClass('fluegel');
-		el.html((function(){with($H){
-			return markup(
-				div({'class':'fluegelButtonsPanel'},
-					button({'class':'btSelI'}, 'I'),
-					button({'class':'btSelB'}, 'B')
-				),
-				div({'class':'fluegelEditor', contenteditable:true}, insertMarkers(docText))
-			);
-		}})())
-		.bind('copy', function(ev){
-			ev.stopPropagation();
-			ev.preventDefault();
-			var sel = getCodeSelection();
+		el.addClass('fluegel')
+			.html((function(){with($H){
+				return markup(
+					div({'class':'fluegelButtonsPanel'},
+						button({'class':'btSelI'}, 'I'),
+						button({'class':'btSelB'}, 'B')
+					),
+					div({'class':'fluegelEditor', contenteditable:true})
+				);
+			}})())
+			.bind('copy', function(ev){
+				ev.stopPropagation();
+				ev.preventDefault();
+				var sel = getCodeSelection();
 
-			clipBoard = sel.textInner;
-		})
-		.bind('cut', function(ev){
-			ev.stopPropagation();
-			ev.preventDefault();
-			var sel = getCodeSelection();
+				clipBoard = sel.textInner;
+			})
+			.bind('cut', function(ev){
+				ev.stopPropagation();
+				ev.preventDefault();
+				var sel = getCodeSelection();
 
-			clipBoard = sel.textInner;
-			init(el, config, sel.textBefore+sel.textAfter);
+				clipBoard = sel.textInner;
+				setText(sel.textBefore+sel.textAfter);
 
-		})
-		.bind('paste', function(ev){
-			ev.stopPropagation();
-			ev.preventDefault();
-			var sel = getCodeSelection();
+			})
+			.bind('paste', function(ev){
+				ev.stopPropagation();
+				ev.preventDefault();
+				var sel = getCodeSelection();
 
-			init(el, config, sel.textBefore+clipBoard+sel.textAfter);
+				// console.log('Clipboard: %s', clipBoard);
 
-		})
-		.find('.btSelI').click(function(){
-			selectWith('i');
-		}).end()
-		.find('.btSelB').click(function(){
-			selectWith('b');
-		}).end()
-		.find('.marker').mouseover(function(){
-			highlightOpposite($(this));
-		}).mouseout(function(){
-			highlightOpposite($(this), true);
-		}).end();
+				setText(sel.textBefore+clipBoard+sel.textAfter);
 
-		drawMarkers(el);
+			})
+			.find('.btSelI').click(function(){
+				selectWith('i');
+			}).end()
+			.find('.btSelB').click(function(){
+				selectWith('b');
+			}).end()
+		;
 
-		setOpposites(el);
+		setText(docText);
+
+		function setText(docText){
+			el.find('.fluegelEditor')
+				.html(insertMarkers(docText))
+				.find('.marker').mouseover(function(){
+					highlightOpposite($(this));
+				}).mouseout(function(){
+					highlightOpposite($(this), true);
+				}).end()
+			;
+
+			drawMarkers(el);
+
+			setOpposites(el);
+		}
 
 		function getCodeSelection(){
 			var code = harvest(null, true);
@@ -325,7 +336,7 @@
 				textInner: removeTextIDs(txtInner),
 				textAfter: removeTextIDs(txtAfter)
 			};
-			console.log('Selection: %o', res);
+			// console.log('Selection: %o', res);
 			return res;
 		}
 
