@@ -19,6 +19,8 @@
 		pc = $C.css.unit.pc,
 		css = $C.css.keywords;
 
+	var clipBoard = '';
+
 
 	$C.css.writeStylesheet({
 		'.fluegel':{
@@ -60,8 +62,8 @@
 		var selection = window.getSelection(),
 			bgn = selection.getRangeAt(0),
 			end = selection.getRangeAt(selection.rangeCount-1);
-		console.log(selection, bgn, end);
-		console.log(bgn.startContainer.nodeValue, bgn.startOffset, ' to ', end.endContainer.nodeValue, end.endOffset);
+		// console.log(selection, bgn, end);
+		// console.log(bgn.startContainer.nodeValue, bgn.startOffset, ' to ', end.endContainer.nodeValue, end.endOffset);
 
 
 		function insertTag(node, pos, name, closing){
@@ -256,33 +258,24 @@
 			ev.preventDefault();
 			var sel = getCodeSelection();
 
-			// var clipboardData = ev.clipboardData 
-			// 	|| ev.originalEvent.clipboardData
-			// 	|| window.clipboardData;
-			// var copiedData = clipboardData.getData('Text');
-			// console.log('text copied: ', copiedData, ev);
+			clipBoard = sel.textInner;
 		})
 		.bind('cut', function(ev){
 			ev.stopPropagation();
 			ev.preventDefault();
 			var sel = getCodeSelection();
 
-			// var clipboardData = ev.clipboardData 
-			// 	|| ev.originalEvent.clipboardData
-			// 	|| window.clipboardData;
-			// var cuttedData = clipboardData.getData('Text');
-			// console.log('text cutted: ', cuttedData, ev);
+			clipBoard = sel.textInner;
+			init(el, config, sel.textBefore+sel.textAfter);
+
 		})
 		.bind('paste', function(ev){
 			ev.stopPropagation();
 			ev.preventDefault();
 			var sel = getCodeSelection();
 
-			// var clipboardData = ev.clipboardData 
-			// 	|| ev.originalEvent.clipboardData
-			// 	|| window.clipboardData;
-			// var pastedData = clipboardData.getData('Text');
-			// console.log('text pasted: ', pastedData, ev);
+			init(el, config, sel.textBefore+clipBoard+sel.textAfter);
+
 		})
 		.find('.btSelI').click(function(){
 			selectWith('i');
@@ -301,35 +294,69 @@
 		setOpposites(el);
 
 		function getCodeSelection(){
-			var code = harvest();
+			var code = harvest(null, true);
 
-			var selection = {
-				sourceCode: code
+			var selection = window.getSelection(),
+				bgn = selection.getRangeAt(0),
+				end = selection.getRangeAt(selection.rangeCount-1);
+
+			function getLabel(node){
+				return '#text'+node.fluegelID+';';
+			}
+
+			var startLabel = getLabel(bgn.startContainer),
+				endLabel = getLabel(end.endContainer);
+
+			var startPos = code.indexOf(startLabel) + bgn.startOffset + startLabel.length, 
+				endPos = code.indexOf(endLabel) + end.endOffset + endLabel.length;
+
+			var txtBefore = code.slice(0, startPos),
+				txtInner = code.slice(startPos, endPos),
+				txtAfter = code.slice(endPos, code.length);
+
+			function removeTextIDs(txt){
+				return txt.replace(/#text\d+;/g, '');
+			}
+			
+
+			var res = {
+				sourceCode: removeTextIDs(code),
+				textBefore: removeTextIDs(txtBefore),
+				textInner: removeTextIDs(txtInner),
+				textAfter: removeTextIDs(txtAfter)
 			};
-			console.log('Selection: %o', selection);
-			return selection;
+			console.log('Selection: %o', res);
+			return res;
 		}
 
-		function harvest(node){
+		function harvest(node, insertIDs){
 			node = node || el.find('.fluegelEditor')[0];
-
-			if(node.nodeName==('CANVAS')){
-				var nd = $(node),
-					nm = nd.attr('data-name'),
-					cls = nd.attr('data-closing')=='true';
-				return [
-					'<',
-					cls?'/':'',
-					,nm,
-					'>'
-				].join('');
+			switch(node.nodeName){
+				case 'CANVAS':
+					var nd = $(node),
+						nm = nd.attr('data-name'),
+						cls = nd.attr('data-closing')=='true';
+					return [
+						'<',
+						cls?'/':'',
+						,nm,
+						'>'
+					].join('');
+				case '#text':
+					if(insertIDs){
+						var id = uid();
+						node.fluegelID = id;
+						return ['#text', id, ';', node.nodeValue].join('');
+					}
+					return node.nodeValue;
+				default: break;
 			}
 
 			if(!node.childNodes.length) return node.nodeValue;
 			
 			var res = [];
 			for(var n,i=0; n=node.childNodes[i],i<node.childNodes.length; i++){
-				res.push(harvest(n));
+				res.push(harvest(n, insertIDs));
 			}
 
 			return res.join('');
