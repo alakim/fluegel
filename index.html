@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Fluegel - web based markup editor</title>
+
+	<script src="lib/jquery-3.1.1.min.js"></script>
+	<script src="lib/clarino.js"></script>
+	<script src="fluegel.js"></script>
+	<style>
+		body{
+			font-family: Verdana, Arial, Sans-Serif;
+		}
+		#result{
+			width: 800px;
+			height: 200px;
+		}
+	</style>
+	<script>
+	(function($){
+		$(function(){
+			var config = {
+				// onchange: function(res){
+				// 	console.log(res);
+				// }
+			};
+			var editor = $('#fluegel').fluegel(
+				config,
+				$('#sourceDoc').html()
+			);
+			$('#btSave').click(function(){
+				var res = editor.harvest();
+				console.log('Harvest: %s', res);
+				$('#result').html(res);
+			});
+		});
+	})(jQuery);
+	</script>
+</head>
+<body>
+	<h1>Fluegel - web based markup editor</h1>
+	<div>
+		Source: <span id="sourceDoc">Lorem <u>ipsum <i>dolor</i> <b>sit</b> amet</u></span>
+	</div>
+	<div id="fluegel"></div>
+	<div>
+		<button id="btSave">Save</button>
+	</div>
+	<textarea id="result" readonly></textarea>
+</body>
+</html>
+
+
