@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Fluegel - web based markup editor</title>
+	<title>Fl&uuml;gel - web based markup editor</title>
 
 	<script src="lib/jquery-3.1.1.min.js"></script>
 	<script src="lib/clarino.js"></script>
@@ -10,6 +10,11 @@
 	<style>
 		body{
 			font-family: Verdana, Arial, Sans-Serif;
+		}
+		.srcFrame{
+			width: 800px;
+			padding: 5px;
+			margin: 10px;
 		}
 		#result{
 			width: 800px;
@@ -38,9 +43,9 @@
 	</script>
 </head>
 <body>
-	<h1>Fluegel - web based markup editor</h1>
-	<div>
-		Source: <span id="sourceDoc">Lorem <u>ipsum <i>dolor</i> <b>sit</b> amet</u></span>
+	<h1>Fl&uuml;gel - web based markup editor</h1>
+	<div class="srcFrame">
+		Source: <span id="sourceDoc">Lorem <u>ipsum <i>dolor</i> <b>sit</b> amet</u>, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</span>
 	</div>
 	<div id="fluegel"></div>
 	<div>
