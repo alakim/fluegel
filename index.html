@@ -25,9 +25,24 @@
 	(function($){
 		$(function(){
 			var config = {
-				// onchange: function(res){
-				// 	console.log(res);
-				// }
+				doctype:[
+					{tag:'i', 
+						label:{text:'К', style:'font-style:italic;'},
+						description:'Выделить курсивом'
+					},
+					{tag:'b',
+						label:{text:'Ж', style:'font-weight:bold;'},
+						description: 'Выделить жирным шрифтом'
+					},
+					{tag:'u',
+						label:{text:'Ч', style:'text-decoration:underline;'},
+						description: 'Выделить подчеркиванием'
+					},
+					{tag:'img', selfClosing:true,
+						label:{text:'Картинка'},
+						description:'Вставить картинку'
+					}
+				]
 			};
 			var editor = $('#fluegel').fluegel(
 				config,
