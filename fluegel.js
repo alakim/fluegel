@@ -19,9 +19,6 @@
 		pc = $C.css.unit.pc,
 		css = $C.css.keywords;
 
-	var clipBoard = '';
-
-
 	$C.css.writeStylesheet({
 		'.fluegel':{
 			width: px(Settings.size.w),
@@ -37,6 +34,14 @@
 					margin: px(0, 8),
 					height: px(Settings.button.size),
 					minWidth: px(Settings.button.size)
+				}
+			},
+			' .fluegelClipboard':{
+				width:px(Settings.size.w),
+				height:px(Settings.size.h),
+				' textarea':{
+					width:pc(100),
+					height:pc(100)
 				}
 			},
 			' .fluegelEditor':{
@@ -111,35 +116,48 @@
 			}
 		};
 
+		function selectValue(val){
+			var el = $('.fluegel .fluegelClipboard textarea').html(
+				val
+			)[0];
+			el.setAttribute('readonly', '');
+			el.select();
+			el.setSelectionRange(0, el.value.length);
+			el.removeAttribute('readonly');
+			var selectedText = el.value;
+			var successful = document.execCommand('copy');
+		}
+
 		editorPnl.addClass('fluegel')
 			.html((function(){with($H){
 				return markup(
 					div({'class':'fluegelButtonsPanel'}),
-					div({'class':'fluegelEditor', contenteditable:true})
+					div({'class':'fluegelEditor', contenteditable:true}),
+					div({'class':'fluegelClipboard'},
+						textarea()
+					)
 				);
 			}})())
 			.bind('copy', function(ev){
 				ev.stopPropagation();
-				ev.preventDefault();
 				var sel = getCodeSelection();
-
-				clipBoard = sel.textInner;
+				selectValue(sel.textInner);
 			})
 			.bind('cut', function(ev){
 				ev.stopPropagation();
-				ev.preventDefault();
+				// ev.preventDefault();
 				var sel = getCodeSelection();
 
-				clipBoard = sel.textInner;
+				// clipBoard = sel.textInner;
 				setText(sel.textBefore+sel.textAfter);
 
 			})
 			.bind('paste', function(ev){
 				ev.stopPropagation();
-				ev.preventDefault();
+				// ev.preventDefault();
 				var sel = getCodeSelection();
 
-				setText(sel.textBefore+clipBoard+sel.textAfter);
+				// setText(sel.textBefore+clipBoard+sel.textAfter);
 
 			})
 		;
