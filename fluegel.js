@@ -118,16 +118,17 @@
 		};
 
 		function selectValue(val, command){
-			var el = $('.fluegel .fluegelClipboard textarea').html(
-				val
-			)[0];
+			// console.log('Value to select: ', val);
+			var el = $('.fluegel .fluegelClipboard textarea')[0];
+			el.value = val;
 			el.setAttribute('readonly', '');
 			el.select();
 			el.setSelectionRange(0, el.value.length);
 			el.removeAttribute('readonly');
 			var selectedText = el.value;
-			console.log('selectedText: %s', selectedText);
+			// console.log('selectedText: %s', selectedText);
 			var successful = document.execCommand(command);
+			// console.log('selection success: ', successful);
 		}
 
 		editorPnl.addClass('fluegel')
