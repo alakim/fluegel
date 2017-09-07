@@ -37,8 +37,9 @@
 				}
 			},
 			' .fluegelClipboard':{
-				width:px(Settings.size.w),
-				height:px(Settings.size.h),
+				width:px(0*Settings.size.w),
+				height:px(0*Settings.size.h),
+				overflow:css.hidden,
 				' textarea':{
 					width:pc(100),
 					height:pc(100)
@@ -116,7 +117,7 @@
 			}
 		};
 
-		function selectValue(val){
+		function selectValue(val, command){
 			var el = $('.fluegel .fluegelClipboard textarea').html(
 				val
 			)[0];
@@ -125,7 +126,8 @@
 			el.setSelectionRange(0, el.value.length);
 			el.removeAttribute('readonly');
 			var selectedText = el.value;
-			var successful = document.execCommand('copy');
+			console.log('selectedText: %s', selectedText);
+			var successful = document.execCommand(command);
 		}
 
 		editorPnl.addClass('fluegel')
@@ -141,24 +143,22 @@
 			.bind('copy', function(ev){
 				ev.stopPropagation();
 				var sel = getCodeSelection();
-				selectValue(sel.textInner);
+				if(!sel) return;
+				selectValue(sel.textInner, 'copy');
 			})
 			.bind('cut', function(ev){
 				ev.stopPropagation();
-				// ev.preventDefault();
 				var sel = getCodeSelection();
-
-				// clipBoard = sel.textInner;
+				if(!sel) return;
+				selectValue(sel.textInner, 'cut');
 				setText(sel.textBefore+sel.textAfter);
 
 			})
 			.bind('paste', function(ev){
 				ev.stopPropagation();
-				// ev.preventDefault();
-				var sel = getCodeSelection();
-
-				// setText(sel.textBefore+clipBoard+sel.textAfter);
-
+				setTimeout(function(){
+					setText(harvest(null, false));
+				}, 20);
 			})
 		;
 
@@ -339,8 +339,11 @@
 		function getCodeSelection(){
 			var code = harvest(null, true);
 
-			var selection = window.getSelection(),
-				bgn = selection.getRangeAt(0),
+			var selection = window.getSelection();
+			// console.log(selection.rangeCount);
+			if(selection.rangeCount<1) return;
+
+			var bgn = selection.getRangeAt(0),
 				end = selection.getRangeAt(selection.rangeCount-1);
 
 			function getLabel(node){
