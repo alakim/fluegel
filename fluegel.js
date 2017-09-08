@@ -6,7 +6,8 @@
 			size:30
 		},
 		marker:{
-			size:{w:20, h:12},
+			size:{w:25, h:12, arrow:7},
+			fontSize: 12,
 			bgColor:{lo:'#4444ff', hi:'#00ff00', error:'#ff0000'},
 			color: {lo:'#ffff00', hi:'#000044'},
 			textLabels: true,
@@ -77,42 +78,51 @@
 				});
 			},
 			markerDraw: function(el, highlight){
-				var sz = Settings.marker.size;
+				if(!el) return;
+				var sz = {}; $C.extend(sz, Settings.marker.size);
 				var name = $(el).attr('data-name'),
 					closing = $(el).attr('data-closing')=='true',
 					unclosed = $(el).attr('data-unclosed')=='true';
 				var ctx = el.getContext('2d');
 				var label = name;
-				
+
 				var def = el.tagDef || editorPnl.tagsByName[name];
 				if(def&&def.label) label = def.label.text;
 
+				var lblSize = label.length*Settings.marker.fontSize;
+				if(lblSize>sz.w-sz.arrow) sz.w = lblSize+sz.arrow;
+
+				el.setAttribute('width', sz.w);
 				ctx.clearRect(0, 0, sz.w, sz.h);
 				ctx.fillStyle = 
 					unclosed?Settings.marker.bgColor.error
 						:highlight?Settings.marker.bgColor.hi
 						:Settings.marker.bgColor.lo;
 				ctx.beginPath();
-				if(closing){
-					ctx.moveTo(sz.w/2, 0);
+				if(def.selfClosing){
+					ctx.rect(0, 0, sz.w, sz.h);
+				}
+				else if(closing){
+					ctx.moveTo(sz.arrow, 0);
 					ctx.lineTo(sz.w, 0);
 					ctx.lineTo(sz.w, sz.h);
-					ctx.lineTo(sz.w/2, sz.h);
+					ctx.lineTo(sz.arrow, sz.h);
 					ctx.lineTo(0, sz.h/2);
 				}
 				else{
 					ctx.moveTo(0, 0);
-					ctx.lineTo(sz.w/2, 0);
+					ctx.lineTo(sz.w - sz.arrow, 0);
 					ctx.lineTo(sz.w, sz.h/2);
-					ctx.lineTo(sz.w/2, sz.h);
+					ctx.lineTo(sz.w - sz.arrow, sz.h);
 					ctx.lineTo(0, sz.h);
 				}
 				ctx.fill();
 
 				ctx.fillStyle = highlight?Settings.marker.color.hi
 						:Settings.marker.color.lo;
-				ctx.font = '12px Arial';
-				ctx.fillText(label, closing?sz.w/2:sz.w*.2, sz.h*.8);
+				ctx.font = px(Settings.marker.fontSize)+' Verdana, Arial, Sans-Serif';
+				ctx.textAlign = css.center;
+				ctx.fillText(label, sz.w/2, sz.h*.8);
 				
 			}
 		};
@@ -263,8 +273,10 @@
 				});
 			}
 
-
-			if(bgn.startContainer==bgn.endContainer){
+			if(selfClosing){
+				insertTag(bgn.startContainer, bgn.startOffset, tagName, false);
+			}
+			else if(bgn.startContainer==bgn.endContainer){
 				insertTagsPair(bgn.startContainer, bgn.startOffset, bgn.endOffset, tagName);
 			}
 			else{

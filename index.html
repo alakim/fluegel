@@ -38,6 +38,10 @@
 						label:{text:'Ч', style:'text-decoration:underline;'},
 						description: 'Выделить подчеркиванием'
 					},
+					{tag:'span',
+						label:{text:'span'},
+						description: 'Фрагмент'
+					},
 					{tag:'img', selfClosing:true,
 						label:{text:'Картинка'},
 						description:'Вставить картинку'
@@ -60,7 +64,7 @@
 <body>
 	<h1>Fl&uuml;gel - web based markup editor</h1>
 	<div class="srcFrame">
-		Source: <span id="sourceDoc">Lorem <u>ipsum <i>dolor</i> <b>sit</b> amet</u>, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</span>
+		Source: <span id="sourceDoc">Lorem <u>ipsum <i>dolor</i> <b>sit</b> amet</u>, consectetur adipiscing elit, sed do eiusmod tempor <span>incididunt ut</span> labore et dolore magna aliqua.</span>
 	</div>
 	<div id="fluegel"></div>
 	<div>
