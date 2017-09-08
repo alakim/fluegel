@@ -86,7 +86,10 @@
 				var ctx = el.getContext('2d');
 				var label = name;
 
-				var def = el.tagDef || editorPnl.tagsByName[name];
+				var def = editorPnl.tagsByName[name];
+				el.tagDef = def; 
+				console.assert(def, 'No tagDef for %o', el);
+
 				if(def&&def.label) label = def.label.text;
 
 				var lblSize = label.length*Settings.marker.fontSize;
@@ -128,7 +131,6 @@
 		};
 
 		function selectValue(val, command){
-			// console.log('Value to select: ', val);
 			var el = $('.fluegel .fluegelClipboard textarea')[0];
 			el.value = val;
 			el.setAttribute('readonly', '');
@@ -136,9 +138,7 @@
 			el.setSelectionRange(0, el.value.length);
 			el.removeAttribute('readonly');
 			var selectedText = el.value;
-			// console.log('selectedText: %s', selectedText);
 			var successful = document.execCommand(command);
-			// console.log('selection success: ', successful);
 		}
 
 		editorPnl.addClass('fluegel')
@@ -146,9 +146,7 @@
 				return markup(
 					div({'class':'fluegelButtonsPanel'}),
 					div({'class':'fluegelEditor', contenteditable:true}),
-					div({'class':'fluegelClipboard'},
-						textarea()
-					)
+					div({'class':'fluegelClipboard'}, textarea())
 				);
 			}})())
 			.bind('copy', function(ev){
@@ -174,7 +172,7 @@
 		;
 
 		function insertMarkers(docText){
-			return docText.replace(/<(\/)?([^>]+)>/gi, function(str, closing, name){
+			return docText.replace(/<(\/)?([^\/>]+)(\/)?>/gi, function(str, closing, name, selfClosing){
 				return templates.marker(name, closing);
 			});
 		}
@@ -390,6 +388,7 @@
 
 		function harvest(node, insertIDs){
 			node = node || editorPnl.find('.fluegelEditor')[0];
+			var def = node.tagDef;
 			switch(node.nodeName){
 				case 'CANVAS':
 					var nd = $(node),
@@ -399,6 +398,7 @@
 						'<',
 						cls?'/':'',
 						,nm,
+						def.selfClosing&&config.xmlMode?'/':'',
 						'>'
 					].join('');
 				case '#text':
