@@ -5,6 +5,11 @@
 		button:{
 			size:30
 		},
+		color:{
+			dialogShield:'rgba(0, 0, 0, .75)',
+			text:'#222',
+			white:'#fff'
+		},
 		marker:{
 			size:{w:25, h:12, arrow:7},
 			fontSize: 12,
@@ -18,6 +23,8 @@
 	var $H = $C.simple;
 	var px = $C.css.unit.px,
 		pc = $C.css.unit.pc,
+		vw = $C.css.unit('vw'),
+		vh = $C.css.unit('vh'),
 		css = $C.css.keywords;
 
 	$C.css.writeStylesheet({
@@ -53,6 +60,42 @@
 				height:px(Settings.size.h - Settings.button.size),
 				' .marker':{
 					cursor: css.default
+				}
+			}
+		},
+		'#fluegelAttributeDialog':{
+			position: css.fixed,
+			top: px(0), left:px(0),
+			width:vw(100), height:vh(100),
+			backgroundColor: Settings.color.dialogShield,
+			' .dlgBody':{
+				width: px(750),
+				margin: px(30, 'auto'),
+				backgroundColor:Settings.color.white,
+				border: Settings.color.text,
+				borderRadius: px(5),
+				' .dlgHeader':{
+					textAlign: css.center,
+					fontSize:px(20),
+					padding: px(8),
+					borderBottom:px(1)+' solid '+Settings.color.text,
+					marginBottom:px(5)
+				},
+				' .dlgContent':{
+					minHeight: px(400)
+				},
+				' .dlgButtons':{
+					borderTop:px(1)+' solid '+Settings.color.text,
+					padding:px(8),
+					display: css.flex,
+					flexDirection: css.row,
+					justifyContent: css.spaceAround,
+					' button':{
+						fontSize:px(16),
+						backgroundColor: '#eee',
+						border: px(1)+' solid '+Settings.color.text,
+						borderRadius: px(3)
+					}
 				}
 			}
 		}
@@ -172,7 +215,8 @@
 		;
 
 		function insertMarkers(docText){
-			return docText.replace(/<(\/)?([^\/>]+)(\/)?>/gi, function(str, closing, name, selfClosing){
+			return docText.replace(/<(\/)?([a-z0-9]+)(\s+([^\/>]*))?(\/)?>/gi, function(str, closing, name, grp3, attributes, selfClosing){
+				// console.log(name, attributes);
 				return templates.marker(name, closing);
 			});
 		}
@@ -215,7 +259,53 @@
 		function drawMarkers(){
 			$(editorPnl).find('.marker').each(function(i, el){
 				templates.markerDraw(el);
+				setEventHandlers(el);
 			});
+		}
+
+		function setEventHandlers(el){
+			var def = el.tagDef;
+			console.assert(def, 'No tag definition for %o', el);
+			if(!def) return;
+			if(def.attributes) $(el).css({cursor:css.pointer}).click(function(){
+				// console.log('clicked at ', new Date());
+				openDialog(el);
+			});
+		}
+
+		function openDialog(el){
+			var def = el.tagDef;
+			console.assert(def, 'No tag definition for %o', el);
+			if(!def) return;
+
+			var dlgID = 'fluegelAttributeDialog';
+
+			var dlg = $('#'+dlgID);
+			if(!dlg.length){
+				dlg = $((function(){with($H){
+						return div({id:dlgID},
+							div({'class':'dlgBody'},
+								div({'class':'dlgHeader'}, 'Атрибуты тега'),
+								div({'class':'dlgContent'}),
+								div({'class':'dlgButtons'},
+									button({'class':'btClose'}, 'Отмена')
+								)
+							)
+						);
+					}})())
+					.click(function(){
+						$(this).fadeOut();
+					})
+					.find('.dlgBody').click(function(ev){
+						ev.stopPropagation();
+					}).end()
+					.find('.btClose').click(function(){
+						$(this).parent().parent().parent().fadeOut();
+					}).end()
+				;
+				$('body').append(dlg);
+			}
+			dlg.fadeIn();
 		}
 
 		function selectWith(def){
@@ -264,6 +354,7 @@
 				cnv.tagDef = def;
 				node.parentNode.insertBefore(cnv, node);
 				templates.markerDraw(cnv, false);
+				setEventHandlers(cnv);
 				$(cnv).mouseover(function(){
 					highlightOpposite($(this));
 				}).mouseout(function(){
@@ -430,4 +521,4 @@
 		var el = $(this)[0];
 		return init($(el), config, docText); 
 	}
-})(jQuery, Clarino.version('0.0.0'));
+})(jQuery, Clarino.version('1.0.1'));
