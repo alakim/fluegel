@@ -309,9 +309,15 @@
 
 			function fill(dlg){
 				var attributes = $(el).attr('data-attributes');
-				var noAttributes = attributes=='{}';
 				//console.log(attributes, typeof(attributes), attributes.length);
-				attributes = JSON.parse(attributes.replace('&quot;', '"'));
+				if(attributes){
+					attributes = attributes.replace(/&quot;/gi, '"');
+					attributes = JSON.parse(attributes);
+				}
+				else{
+					attributes = {};
+				}
+
 				dlg
 					.find('.dlgBody .dlgContent').html((function(){with($H){
 						return table(
@@ -323,7 +329,7 @@
 											'class':'tbAttrValue',
 											'data-attrName':nm,
 											type:'text', 
-											value:attributes[nm]
+											value:attributes[nm] || ''
 										})
 									)
 								);
@@ -331,10 +337,24 @@
 						);
 					}})()).end()
 					.find('.tagName').html(def.description).end()
-					.find('.btSave').each(function(i, bt){
-						if(noAttributes) $(bt).hide();
-						else $(bt).show();
-					}).end()
+					.find('.btSave')
+						.unbind('click')
+						.click(function(){
+							var attrJson = {};
+							dlg.find('.tbAttrValue').each(function(i, fld){fld=$(fld);
+								var nm = fld.attr('data-attrName'),
+									val = fld.val();
+								attrJson[nm] = val;
+							});
+							attrJson = JSON.stringify(attrJson).replace(/\"/gi, '&quot;');
+							$(el).attr({'data-attributes': attrJson});
+							close($(this).parent().parent().parent());
+						})
+						.each(function(i, bt){
+							if(!(def && def.attributes)) $(bt).hide();
+							else $(bt).show();
+						})
+					.end()
 					.find('.btDel').unbind('click').click(function(){
 						if(confirm('Удалить этот тег?')){
 							el.remove();
@@ -371,17 +391,6 @@
 						ev.stopPropagation();
 					}).end()
 					.find('.btClose').click(function(){
-						close($(this).parent().parent().parent());
-					}).end()
-					.find('.btSave').click(function(){
-						var attrJson = {};
-						dlg.find('.tbAttrValue').each(function(i, fld){fld=$(fld);
-							var nm = fld.attr('data-attrName'),
-								val = fld.val();
-							attrJson[nm] = val;
-						});
-						attrJson = JSON.stringify(attrJson).replace(/\"/gi, '&quot;');
-						$(el).attr({'data-attributes': attrJson});
 						close($(this).parent().parent().parent());
 					}).end()
 				;
@@ -569,11 +578,14 @@
 						nm = nd.attr('data-name'),
 						cls = nd.attr('data-closing')=='true';
 					var attr = [];
-					var attrColl = JSON.parse(nd.attr('data-attributes').replace(/&quot;/gi, '"'));
-					for(var attNm in attrColl){
-						var val = attrColl[attNm];
-						val = val.replace(/\"/, '\"');
-						attr.push(attNm+'='+'"'+val+'"');
+					var attrColl = nd.attr('data-attributes');
+					if(attrColl){
+						attrColl = JSON.parse(attrColl.replace(/&quot;/gi, '"'));
+						for(var attNm in attrColl){
+							var val = attrColl[attNm];
+							val = val.replace(/\"/, '\"');
+							attr.push(attNm+'='+'"'+val+'"');
+						}
 					}
 					attr = attr.join(' ');
 					if(attr.length) attr = ' '+attr;
