@@ -8,7 +8,8 @@
 		color:{
 			dialogShield:'rgba(0, 0, 0, .75)',
 			text:'#222',
-			white:'#fff'
+			white:'#fff',
+			attention: '#f08'
 		},
 		marker:{
 			size:{w:25, h:12, arrow:7},
@@ -84,7 +85,7 @@
 				},
 				' .dlgContent':{
 					padding: px(10),
-					minHeight: px(400)
+					minHeight: px(200)
 				},
 				' .dlgButtons':{
 					borderTop:px(1)+' solid '+Settings.color.text,
@@ -96,7 +97,11 @@
 						fontSize:px(16),
 						backgroundColor: '#eee',
 						border: px(1)+' solid '+Settings.color.text,
-						borderRadius: px(3)
+						borderRadius: px(3),
+						'.btDel':{
+							color: Settings.color.attention,
+							borderColor: Settings.color.attention
+						}
 					}
 				}
 			}
@@ -284,13 +289,18 @@
 			var def = el.tagDef;
 			console.assert(def, 'No tag definition for %o', el);
 			if(!def) return;
-			if(def.attributes) $(el).css({cursor:css.pointer}).click(function(){
-				// console.log('clicked at ', new Date());
+			$(el).css({cursor:css.pointer}).click(function(){
 				openDialog(el);
 			});
 		}
 
 		function openDialog(el){
+			var opposite = el.opposite;
+			if(opposite && $(opposite).attr('data-closing')!='true'){
+				var ee = el;
+				el = opposite;
+				opposite = ee;
+			}
 			var def = el.tagDef;
 			console.assert(def, 'No tag definition for %o', el);
 			if(!def) return;
@@ -299,8 +309,11 @@
 
 			function fill(dlg){
 				var attributes = $(el).attr('data-attributes');
-				if(attributes) attributes = JSON.parse(attributes.replace('&quot;', '"'));
-				dlg.find('.dlgBody .dlgContent').html((function(){with($H){
+				var noAttributes = attributes=='{}';
+				//console.log(attributes, typeof(attributes), attributes.length);
+				attributes = JSON.parse(attributes.replace('&quot;', '"'));
+				dlg
+					.find('.dlgBody .dlgContent').html((function(){with($H){
 						return table(
 							apply(def.attributes, function(att, nm){
 								return tr(
@@ -316,7 +329,19 @@
 								);
 							})
 						);
-					}})())
+					}})()).end()
+					.find('.tagName').html(def.description).end()
+					.find('.btSave').each(function(i, bt){
+						if(noAttributes) $(bt).hide();
+						else $(bt).show();
+					}).end()
+					.find('.btDel').unbind('click').click(function(){
+						if(confirm('Удалить этот тег?')){
+							el.remove();
+							if(opposite) opposite.remove();
+							close($(this).parent().parent().parent());
+						}
+					}).end()
 				;
 			}
 
@@ -329,10 +354,11 @@
 				dlg = $((function(){with($H){
 						return div({id:dlgID},
 							div({'class':'dlgBody'},
-								div({'class':'dlgHeader'}, 'Атрибуты тега'),
+								div({'class':'dlgHeader'}, 'Тег "', span({'class':'tagName'}),'"'),
 								div({'class':'dlgContent'}),
 								div({'class':'dlgButtons'},
 									button({'class':'btSave'}, 'Сохранить'),
+									button({'class':'btDel'}, 'Удалить'),
 									button({'class':'btClose'}, 'Отмена')
 								)
 							)

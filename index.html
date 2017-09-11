@@ -41,7 +41,12 @@
 					},
 					{tag:'span',
 						label:{text:'span'},
-						description: 'Фрагмент'
+						description: 'Фрагмент',
+						attributes:{
+							id:{
+								label:'Идентификатор'
+							}
+						}
 					},
 					{tag:'img', selfClosing:true,
 						label:{text:'Картинка'},
@@ -76,7 +81,7 @@
 <body>
 	<h1>Fl&uuml;gel - web based markup editor</h1>
 	<div class="srcFrame">
-		Source: <span id="sourceDoc">Lorem <u>ipsum <i>dolor</i> <b>sit</b> amet</u>, consectetur <img src="picture.jpg" id='p1' width="10"/> adipiscing elit, sed do eiusmod tempor <span>incididunt ut</span> labore et dolore magna aliqua.</span>
+		Source: <span id="sourceDoc">Lorem <u>ipsum <i>dolor</i> <b>sit</b> amet</u>, consectetur <img src="picture.jpg" id='p1' width="10"/> adipiscing elit, sed do eiusmod tempor <span id="sp22">incididunt ut</span> labore et dolore magna aliqua.</span>
 	</div>
 	<div id="fluegel"></div>
 	<div>
