@@ -64,6 +64,7 @@
 			}
 		},
 		'#fluegelAttributeDialog':{
+			display: css.none,
 			position: css.fixed,
 			top: px(0), left:px(0),
 			width:vw(100), height:vh(100),
@@ -82,11 +83,12 @@
 					marginBottom:px(5)
 				},
 				' .dlgContent':{
+					padding: px(10),
 					minHeight: px(400)
 				},
 				' .dlgButtons':{
 					borderTop:px(1)+' solid '+Settings.color.text,
-					padding:px(8),
+					padding:px(8, 50),
 					display: css.flex,
 					flexDirection: css.row,
 					justifyContent: css.spaceAround,
@@ -108,16 +110,31 @@
 		};
 	})();
 
+	function parseAttributes(attributes){
+		var attrJson = {};
+		if(attributes){
+			var mt = attributes.match(/([a-z0-9]+)=((\"([^\"]+)\")|(\'([^\'+])\'))\s*/gi);
+			for(var g,i=0; g=mt[i],i<mt.length; i++){
+				g = g.split('=');
+				attrJson[g[0]] = g[1].replace(/^\s*[\"\']/g, '').replace(/[\"\']\s*$/g, '');
+			}
+		}
+		return attrJson;
+	}
 
 	function init(editorPnl, config, docText){
 		var templates = {
-			marker: function(name, closing){
+			marker: function(name, attributes, closing){
 				var sz = Settings.marker.size;
+				var attrJson = JSON.stringify(parseAttributes(attributes))
+					.replace(/\"/gi, '&quot;');
+
 				return $C.html.canvas({
 					'class':'marker',
 					width:px(sz.w), height: px(sz.h),
 					'data-name':name,
-					'data-closing':!!closing
+					'data-closing':!!closing,
+					'data-attributes':attrJson
 				});
 			},
 			markerDraw: function(el, highlight){
@@ -217,7 +234,7 @@
 		function insertMarkers(docText){
 			return docText.replace(/<(\/)?([a-z0-9]+)(\s+([^\/>]*))?(\/)?>/gi, function(str, closing, name, grp3, attributes, selfClosing){
 				// console.log(name, attributes);
-				return templates.marker(name, closing);
+				return templates.marker(name, attributes, closing);
 			});
 		}
 
@@ -280,6 +297,33 @@
 
 			var dlgID = 'fluegelAttributeDialog';
 
+			function fill(dlg){
+				var attributes = $(el).attr('data-attributes');
+				if(attributes) attributes = JSON.parse(attributes.replace('&quot;', '"'));
+				dlg.find('.dlgBody .dlgContent').html((function(){with($H){
+						return table(
+							apply(def.attributes, function(att, nm){
+								return tr(
+									td(att.label),
+									td(
+										input({
+											'class':'tbAttrValue',
+											'data-attrName':nm,
+											type:'text', 
+											value:attributes[nm]
+										})
+									)
+								);
+							})
+						);
+					}})())
+				;
+			}
+
+			function close(dlg){
+				dlg.fadeOut(200);
+			}
+
 			var dlg = $('#'+dlgID);
 			if(!dlg.length){
 				dlg = $((function(){with($H){
@@ -288,23 +332,36 @@
 								div({'class':'dlgHeader'}, 'Атрибуты тега'),
 								div({'class':'dlgContent'}),
 								div({'class':'dlgButtons'},
+									button({'class':'btSave'}, 'Сохранить'),
 									button({'class':'btClose'}, 'Отмена')
 								)
 							)
 						);
 					}})())
 					.click(function(){
-						$(this).fadeOut();
+						close($(this));
 					})
 					.find('.dlgBody').click(function(ev){
 						ev.stopPropagation();
 					}).end()
 					.find('.btClose').click(function(){
-						$(this).parent().parent().parent().fadeOut();
+						close($(this).parent().parent().parent());
+					}).end()
+					.find('.btSave').click(function(){
+						var attrJson = {};
+						dlg.find('.tbAttrValue').each(function(i, fld){fld=$(fld);
+							var nm = fld.attr('data-attrName'),
+								val = fld.val();
+							attrJson[nm] = val;
+						});
+						attrJson = JSON.stringify(attrJson).replace(/\"/gi, '&quot;');
+						$(el).attr({'data-attributes': attrJson});
+						close($(this).parent().parent().parent());
 					}).end()
 				;
 				$('body').append(dlg);
 			}
+			fill(dlg);
 			dlg.fadeIn();
 		}
 
@@ -485,10 +542,20 @@
 					var nd = $(node),
 						nm = nd.attr('data-name'),
 						cls = nd.attr('data-closing')=='true';
+					var attr = [];
+					var attrColl = JSON.parse(nd.attr('data-attributes').replace(/&quot;/gi, '"'));
+					for(var attNm in attrColl){
+						var val = attrColl[attNm];
+						val = val.replace(/\"/, '\"');
+						attr.push(attNm+'='+'"'+val+'"');
+					}
+					attr = attr.join(' ');
+					if(attr.length) attr = ' '+attr;
 					return [
 						'<',
 						cls?'/':'',
 						,nm,
+						attr,
 						def.selfClosing&&config.xmlMode?'/':'',
 						'>'
 					].join('');

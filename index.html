@@ -47,8 +47,14 @@
 						label:{text:'Картинка'},
 						description:'Вставить картинку',
 						attributes:{
+							id:{
+								label:'Идентификатор'
+							},
 							src:{
 								label:'Ссылка на файл'
+							},
+							width:{
+								label:'Ширина'
 							}
 						}
 					}
@@ -70,7 +76,7 @@
 <body>
 	<h1>Fl&uuml;gel - web based markup editor</h1>
 	<div class="srcFrame">
-		Source: <span id="sourceDoc">Lorem <u>ipsum <i>dolor</i> <b>sit</b> amet</u>, consectetur <img src="picture.jpg"/> adipiscing elit, sed do eiusmod tempor <span>incididunt ut</span> labore et dolore magna aliqua.</span>
+		Source: <span id="sourceDoc">Lorem <u>ipsum <i>dolor</i> <b>sit</b> amet</u>, consectetur <img src="picture.jpg" id='p1' width="10"/> adipiscing elit, sed do eiusmod tempor <span>incididunt ut</span> labore et dolore magna aliqua.</span>
 	</div>
 	<div id="fluegel"></div>
 	<div>
