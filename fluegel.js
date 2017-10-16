@@ -115,6 +115,33 @@
 		};
 	})();
 
+	var regex = (function(){
+		function regex(parts, flags){
+			var src = [];
+			var groups = [];
+			for(var p,i=0; p=parts[i],i<parts.length; i++){
+				src.push(p instanceof RegExp?p.source:p)
+				if(p.group_name) groups.push(p.group_name);
+			}
+			var reg = new RegExp(src.join(''), flags);
+			var grpIdx = {};
+			for(var g,i=0; g=groups[i],i<groups.length; i++){
+				grpIdx[g] = i+1;
+			}
+			reg.groups = grpIdx;
+
+			return reg;
+		};
+		regex.group = function(name, re, quant){
+			var rrr = new RegExp([
+				'(', re.source, ')', quant
+			].join(''));
+			rrr.group_name = name;
+			return rrr;
+		};
+		return regex;
+	})();
+
 	function parseAttributes(attributes){
 		var attrJson = {};
 		if(attributes){
@@ -235,11 +262,28 @@
 				}, 20);
 			})
 		;
+ 
+		var reMarker = new regex([
+			/</,
+			regex.group('closing', /\//, '?'),
+			regex.group('tagName', /[a-z0-9]+/),
+			'(\\s+',
+			regex.group('tagAttributes', /[^\/>]*/), 
+			')?',
+			regex.group('closed', /\//, '?'),
+			/>/
+		], 'gi');
 
 		function insertMarkers(docText){
-			return docText.replace(/<(\/)?([a-z0-9]+)(\s+([^\/>]*))?(\/)?>/gi, function(str, closing, name, grp3, attributes, selfClosing){
-				// console.log(name, attributes);
-				return templates.marker(name, attributes, closing);
+			return docText.replace(reMarker, function(){
+				var closing = arguments[reMarker.groups['closing']],
+					name = arguments[reMarker.groups['tagName']],
+					attributes = arguments[reMarker.groups['tagAttributes']];
+				return templates.marker(
+					arguments[reMarker.groups['tagName']],
+					arguments[reMarker.groups['tagAttributes']],
+					arguments[reMarker.groups['closing']]
+				);
 			});
 		}
 
@@ -512,10 +556,28 @@
 			});
 		}
 
+		function applyParsers(docText, config){
+			var parsers = [];
+			function collectParsers(doctype){
+				// for(var tagNm in doctype){
+				for(var tagDef,i=0; tagDef=doctype[i],i<doctype.length; i++){
+					// var tagDef = doctype[tagNm];
+					if(tagDef.parser) parsers.push(tagDef.parser);
+					if(tagDef.children) collectParsers(tagDef.children);
+				}
+			}
+			collectParsers(config.doctype);
+			for(var prs,i=0; prs=parsers[i],i<parsers.length; i++){
+				docText = prs(docText);
+			}
+			return docText;
+		}
 
 		setText(docText);
 
 		function setText(docText){
+			docText = applyParsers(docText, config);
+			console.log('Set text: %s', docText);
 			editorPnl.find('.fluegelEditor')
 				.html(insertMarkers(docText))
 				.find('.marker').mouseover(function(){

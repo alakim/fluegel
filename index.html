@@ -15,6 +15,7 @@
 			width: 800px;
 			padding: 5px;
 			margin: 10px;
+			border: 1px solid #ccc;
 		}
 		#result{
 			width: 800px;
@@ -24,6 +25,10 @@
 	<script>
 	(function($){
 		$(function(){
+			$('.btApplySource').click(function(){
+				var srcCode = $(this).parent().find('.srcCode').html();
+				editor = createEditor(srcCode);
+			});
 			var config = {
 				xmlMode: true,
 				doctype:[
@@ -61,14 +66,32 @@
 							width:{
 								label:'Ширина'
 							}
+						},
+						parser:function(src){
+							src = src.replace(/picture:([a-z0-9\.\-\_\/\\]+)/g, function(mt, fileNm){
+								return '<img src="'+fileNm+'">';
+							});
+							return src;
 						}
+					},
+					{tag:'ul', label:{text:'Список'}, description:'Форматирует список',
+						attributes:{id:{label:'Идентификатор'}},
+						children:[
+							{tag:'li', label:{text:'Элемент списка'}}
+						]
 					}
 				]
 			};
-			var editor = $('#fluegel').fluegel(
-				config,
-				$('#sourceDoc').html()
-			);
+
+			function createEditor(srcCode){
+				return $('#fluegel').fluegel(
+					config,
+					srcCode
+				);
+			}
+
+			var editor = createEditor($('#sourceDoc_1').html());
+
 			$('#btSave').click(function(){
 				var res = editor.harvest();
 				console.log('Harvest: %s', res);
@@ -80,8 +103,14 @@
 </head>
 <body>
 	<h1>Fl&uuml;gel - web based markup editor</h1>
+	<p>Source code samples: </p>
 	<div class="srcFrame">
-		Source: <span id="sourceDoc">Lorem <u>ipsum <i>dolor</i> <b>sit</b> amet</u>, consectetur <img src="picture.jpg" id='p1' width="10"/> adipiscing elit, sed do eiusmod tempor <span id="sp22">incididunt ut</span> labore et dolore magna aliqua.</span>
+		<span class="srcCode" id="sourceDoc_1">Lorem <u>ipsum <i>dolor</i> <b>sit</b> amet</u>, consectetur <img src="picture.jpg" id='p1' width="10"/> adipiscing elit, sed do eiusmod tempor <span id="sp22">incididunt ut</span> labore et dolore magna aliqua.</span>
+		<button class="btApplySource">Apply</button>
+	</div>
+	<div class="srcFrame">
+		<span class="srcCode" id="sourceDoc_2">picture:logo.gif</span>
+		<button class="btApplySource">Apply</button>
 	</div>
 	<div id="fluegel"></div>
 	<div>
