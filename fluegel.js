@@ -268,7 +268,7 @@
 			regex.group('closing', /\//, '?'),
 			regex.group('tagName', /[a-z0-9]+/),
 			'(\\s+',
-			regex.group('tagAttributes', /[^\/>]*/), 
+			regex.group('tagAttributes', /([a-z0-9\_\-]+\=\"[^\"]+\"\s*)*/), 
 			')?',
 			regex.group('closed', /\//, '?'),
 			/>/
