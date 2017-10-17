@@ -74,11 +74,35 @@
 							return src;
 						}
 					},
-					{tag:'ul', label:{text:'Список'}, description:'Форматирует список',
+					{tag:'li', label:{text:'Элемент списка'}},
+					{tag:'ol', label:{text:'Список'}, description:'Форматирует список',
 						attributes:{id:{label:'Идентификатор'}},
-						children:[
-							{tag:'li', label:{text:'Элемент списка'}}
-						]
+						children:'li'.split(';'),
+						parser: function(src){
+							var lines = src.split('\n'), list  = [], res = [];
+							lines.forEach((str, idx)=>{
+								// console.log('%s : %s', idx, str);
+								var mt = str.match(/^\s*\d+\)\s*(.+)$/);
+								if(mt){
+									list.push(mt[1]);
+								}
+								else{
+									if(!list.length)
+										res.push(str);
+									else{
+										res.push('<ol>');
+										list.forEach(e=>{
+											res.push('<li>');
+											res.push(e);
+											res.push('</li>');
+										});
+										res.push('</ol>');
+									}
+								}
+							});
+							// console.log(res);
+							return res.join('');
+						}
 					}
 				]
 			};
@@ -110,6 +134,14 @@
 	</div>
 	<div class="srcFrame">
 		<span class="srcCode" id="sourceDoc_2">picture:/www/logo.gif</span>
+		<button class="btApplySource">Apply</button>
+	</div>
+	<div class="srcFrame">
+		<span class="srcCode" id="sourceDoc_3">
+			1) c#
+			2) java
+			3) lisp
+		</span>
 		<button class="btApplySource">Apply</button>
 	</div>
 	<div id="fluegel"></div>
