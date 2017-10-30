@@ -418,6 +418,7 @@
 						if(confirm('Удалить этот тег?')){
 							el.remove();
 							if(opposite) opposite.remove();
+							refresh();
 							close($(this).parent().parent().parent());
 						}
 					}).end()
