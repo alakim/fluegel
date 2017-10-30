@@ -34,11 +34,11 @@
 			' .fluegelButtonsPanel':{
 				width: pc(100),
 				background: '#eee',
-				border: px(1)+' solid #888',
+				border: $C.css.template.border(1, '#888'),
 				padding: px(1, 5),
 				' button':{
 					background: '#ccc',
-					border: px(1)+' solid #888',
+					border: $C.css.template.border(1, '#888'),
 					borderRadius: px(4),
 					margin: px(0, 8),
 					height: px(Settings.button.size),
@@ -56,7 +56,7 @@
 			},
 			' .fluegelEditor':{
 				padding:px(5),
-				border:px(1)+' solid #ccc',
+				border: $C.css.template.border(1, '#ccc'),
 				width: pc(100),
 				height:px(Settings.size.h - Settings.button.size),
 				' .marker':{
@@ -80,7 +80,7 @@
 					textAlign: css.center,
 					fontSize:px(20),
 					padding: px(8),
-					borderBottom:px(1)+' solid '+Settings.color.text,
+					borderBottom: $C.css.template.border(1, Settings.color.text),
 					marginBottom:px(5)
 				},
 				' .dlgContent':{
@@ -88,7 +88,7 @@
 					minHeight: px(200)
 				},
 				' .dlgButtons':{
-					borderTop:px(1)+' solid '+Settings.color.text,
+					borderTop: $C.css.template.border(1, Settings.color.text),
 					padding:px(8, 50),
 					display: css.flex,
 					flexDirection: css.row,
@@ -96,7 +96,7 @@
 					' button':{
 						fontSize:px(16),
 						backgroundColor: '#eee',
-						border: px(1)+' solid '+Settings.color.text,
+						border:$C.css.template.border(1, Settings.color.text),
 						borderRadius: px(3),
 						'.btDel':{
 							color: Settings.color.attention,
@@ -157,17 +157,23 @@
 	function init(editorPnl, config, docText){
 		var templates = {
 			marker: function(name, attributes, closing){
+				closing = !!closing;
+				//console.log(name, closing);
 				var sz = Settings.marker.size;
+				var def = editorPnl.tagsByName[name];
 				var attrJson = JSON.stringify(parseAttributes(attributes))
 					.replace(/\"/gi, '&quot;');
 
-				return $C.html.canvas({
-					'class':'marker',
-					width:px(sz.w), height: px(sz.h),
-					'data-name':name,
-					'data-closing':!!closing,
-					'data-attributes':attrJson
-				});
+				return (closing?'':('<span class="tag_'+name+'">'))
+					+$C.html.canvas({
+						'class':'marker tag_marker_'+name,
+						width:px(sz.w), height: px(sz.h),
+						'data-name':name,
+						'data-closing':closing,
+						'data-attributes':attrJson
+					})
+					+(closing||def.selfClosing?'</span>':'')
+				;
 			},
 			markerDraw: function(el, highlight){
 				if(!el) return;
@@ -459,9 +465,10 @@
 					txtAfter = txt.slice(pos, txt.length);
 
 				node.parentNode.insertBefore(document.createTextNode(txtBefore), node);
-				insertMarker(node, name, closing)
+				var mrk = insertMarker(node, name, closing)
 				node.parentNode.insertBefore(document.createTextNode(txtAfter), node);
 				node.parentNode.removeChild(node);
+				$(mrk).wrap($H.span({'class':'tag_'+name}));
 			}
 
 			function insertTagsPair(node, pos1, pos2, name){
@@ -471,12 +478,18 @@
 					t2 = txt.slice(pos1, pos2),
 					t3 = txt.slice(pos2, txt.length);
 				//console.log(t1, t2, t3);
+
 				node.parentNode.insertBefore(document.createTextNode(t1), node);
-				insertMarker(node, name)
-				node.parentNode.insertBefore(document.createTextNode(t2), node);
-				insertMarker(node, name, true)
+				var tsp = document.createElement('span');
+				tsp.setAttribute('class','tag_'+name);
+				node.parentNode.insertBefore(tsp, node);
+				var xN = $(tsp).html($H.span()).find('span')[0];
+				var mrk1 = insertMarker(xN, name);
+				tsp.insertBefore(document.createTextNode(t2), xN);
+				var mrk2 = insertMarker(xN, name, true);
 				node.parentNode.insertBefore(document.createTextNode(t3), node);
 				node.parentNode.removeChild(node);
+				xN.parentNode.removeChild(xN);
 			}
 
 			function insertMarker(node, name, closing){
@@ -496,6 +509,7 @@
 				}).mouseout(function(){
 					highlightOpposite($(this), true);
 				});
+				return cnv;
 			}
 
 			if(selfClosing){
@@ -688,4 +702,4 @@
 		var el = $(this)[0];
 		return init($(el), config, docText); 
 	}
-})(jQuery, Clarino.version('1.0.1'));
+})(jQuery, Clarino.version('1.1.0'));
