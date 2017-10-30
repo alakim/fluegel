@@ -24,7 +24,8 @@
 	</style>
 	<script>
 	(function($, $C){
-		var css = $C.css.keywords;
+		var px = $C.css.unit.px,
+			css = $C.css.keywords;
 
 		$C.css.writeStylesheet({
 			'#fluegel':{
@@ -35,6 +36,13 @@
 				' .tag_img':{
 					display: css.block,
 					textAlign: css.center
+				},
+				' .tag_ol':{
+					display: css.block,
+					' .tag_li':{
+						display: css.block,
+						marginLeft:px(25)
+					}
 				}
 			}
 		});

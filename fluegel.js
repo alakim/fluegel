@@ -293,6 +293,11 @@
 			});
 		}
 
+		function refresh(){
+			var res = harvest();
+			init(editorPnl, config, res);
+		}
+
 		function drawButtons(){
 			if(!config.doctype) return;
 			editorPnl.tagDefinitions = [];
@@ -305,18 +310,22 @@
 
 			$(editorPnl).find('.fluegelButtonsPanel')
 				.html((function(){with($H){
-					return apply(config.doctype, function(t){
-						return button({'class':'tagButton', 
-								'data-tagID':t.id
-							},
-							t.description?{title:t.description}:null,
-							t.label?
-								t.label.style?{style:t.label.style}:null
-								:null,
-							t.label && t.label.text?t.label.text:t.tag
-						);
-					});
+					return markup(
+						button({'class':'btRefresh'}, 'Refresh'),
+						apply(config.doctype, function(t){
+							return button({'class':'tagButton', 
+									'data-tagID':t.id
+								},
+								t.description?{title:t.description}:null,
+								t.label?
+									t.label.style?{style:t.label.style}:null
+									:null,
+								t.label && t.label.text?t.label.text:t.tag
+							);
+						})
+					);
 				}})())
+				.find('.btRefresh').click(refresh).end()
 				.find('.tagButton').click(function(){
 					selectWith(
 						editorPnl.tagDefinitions[
@@ -480,16 +489,26 @@
 				//console.log(t1, t2, t3);
 
 				node.parentNode.insertBefore(document.createTextNode(t1), node);
-				var tsp = document.createElement('span');
-				tsp.setAttribute('class','tag_'+name);
-				node.parentNode.insertBefore(tsp, node);
-				var xN = $(tsp).html($H.span()).find('span')[0];
-				var mrk1 = insertMarker(xN, name);
-				tsp.insertBefore(document.createTextNode(t2), xN);
-				var mrk2 = insertMarker(xN, name, true);
+				var mrk1 = insertMarker(node, name);
+				node.parentNode.insertBefore(document.createTextNode(t2), node);
+				var mrk2 = insertMarker(node, name, true);
+				wrapBetween(mrk1, mrk2, name);
 				node.parentNode.insertBefore(document.createTextNode(t3), node);
 				node.parentNode.removeChild(node);
-				xN.parentNode.removeChild(xN);
+			}
+
+			function wrapBetween(m1, m2, name){
+				var tsp = document.createElement('span');
+				tsp.setAttribute('class','tag_'+name);
+				m1.parentNode.insertBefore(tsp, m1);
+				var coll = [m1], n = m1;
+				while(n!=m2){
+					n = n.nextSibling;
+					coll.push(n);
+				}
+				for(var n,i=0; n=coll[i],i<coll.length; i++){
+					tsp.appendChild(n);
+				}
 			}
 
 			function insertMarker(node, name, closing){
@@ -521,6 +540,7 @@
 			else{
 				insertTag(bgn.startContainer, bgn.startOffset, tagName, false);
 				insertTag(end.endContainer, end.endOffset, tagName, true);
+				refresh(); // temporary solution
 			}
 
 			if (window.getSelection) {
