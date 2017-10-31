@@ -33,6 +33,7 @@
 			width: px(Settings.size.w),
 			' .fluegelButtonsPanel':{
 				width: pc(100),
+				height: px(30),
 				background: '#eee',
 				border: $C.css.template.border(1, '#888'),
 				padding: px(1, 5),
@@ -43,6 +44,9 @@
 					margin: px(0, 8),
 					height: px(Settings.button.size),
 					minWidth: px(Settings.button.size)
+				},
+				' .btCodeView':{
+					'float':css.left
 				}
 			},
 			' .fluegelClipboard':{
@@ -62,6 +66,11 @@
 				' .marker':{
 					cursor: css.default
 				}
+			},
+			' .pnlCodeView':{
+				display: css.none,
+				width: pc(100),
+				height:px(Settings.size.h - Settings.button.size)
 			}
 		},
 		'#fluegelAttributeDialog':{
@@ -244,6 +253,7 @@
 				return markup(
 					div({'class':'fluegelButtonsPanel'}),
 					div({'class':'fluegelEditor', contenteditable:true}),
+					textarea({'class':'pnlCodeView'}),
 					div({'class':'fluegelClipboard'}, textarea())
 				);
 			}})())
@@ -298,6 +308,27 @@
 			init(editorPnl, config, res);
 		}
 
+		function toggleView(){
+			var labels = ['Code view', 'Markup view'];
+			var txt = $(this).html();
+			if(txt==labels[0]){
+				$(this).html(labels[1]);
+				editorPnl.find('.fluegelEditor').hide();
+				editorPnl.find('.pnlTagButtons').hide();
+				editorPnl.find('.pnlCodeView')
+					.val(harvest())
+					.fadeIn()
+				;
+			}
+			else{
+				$(this).html(labels[0]);
+				var cv = editorPnl.find('.pnlCodeView').hide();
+				editorPnl.find('.pnlTagButtons').fadeIn();
+				editorPnl.find('.fluegelEditor').fadeIn();
+				init(editorPnl, config, cv.val());
+			}
+		}
+
 		function drawButtons(){
 			if(!config.doctype) return;
 			editorPnl.tagDefinitions = [];
@@ -311,21 +342,25 @@
 			$(editorPnl).find('.fluegelButtonsPanel')
 				.html((function(){with($H){
 					return markup(
-						button({'class':'btRefresh'}, 'Refresh'),
-						apply(config.doctype, function(t){
-							return button({'class':'tagButton', 
-									'data-tagID':t.id
-								},
-								t.description?{title:t.description}:null,
-								t.label?
-									t.label.style?{style:t.label.style}:null
-									:null,
-								t.label && t.label.text?t.label.text:t.tag
-							);
-						})
+						button({'class':'btCodeView'}, 'Code view'),
+						div({'class':'pnlTagButtons'},
+							button({'class':'btRefresh'}, 'Refresh'),
+							apply(config.doctype, function(t){
+								return button({'class':'tagButton', 
+										'data-tagID':t.id
+									},
+									t.description?{title:t.description}:null,
+									t.label?
+										t.label.style?{style:t.label.style}:null
+										:null,
+									t.label && t.label.text?t.label.text:t.tag
+								);
+							})
+							)
 					);
 				}})())
 				.find('.btRefresh').click(refresh).end()
+				.find('.btCodeView').click(toggleView).end()
 				.find('.tagButton').click(function(){
 					selectWith(
 						editorPnl.tagDefinitions[
