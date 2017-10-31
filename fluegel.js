@@ -63,6 +63,7 @@
 				border: $C.css.template.border(1, '#ccc'),
 				width: pc(100),
 				height:px(Settings.size.h - Settings.button.size),
+				overflow: 'scroll',
 				' .marker':{
 					cursor: css.default
 				}
