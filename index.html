@@ -134,7 +134,8 @@
 			};
 
 			function createEditor(srcCode){
-				return $('#fluegel').fluegel(
+				Fluegel.init(
+					$('#fluegel'),
 					config,
 					srcCode
 				);

@@ -1,4 +1,4 @@
-(function($, $C){
+const Fluegel = (function($, $C){
 
 	const Settings = {
 		size: {w: 800, h:200},
@@ -18,6 +18,15 @@
 			color: {lo:'#ffff00', hi:'#000044'},
 			textLabels: true,
 			highlightOpposite: true 
+		},
+		dialog:{
+			error:function(msg){
+				alert('Error:\n'+msg);
+				return Promise.resolve();
+			},
+			confirmation:function(msg){
+				return Promise.resolve(confirm(msg));
+			}
 		}
 	};
 
@@ -165,12 +174,19 @@
 	}
 
 	function init(editorPnl, config, docText){
+		editorPnl = $(editorPnl);
 		const templates = {
 			marker: function(name, attributes, closing){
 				closing = !!closing;
 				//console.log(name, closing);
 				const sz = Settings.marker.size;
 				const def = editorPnl.tagsByName[name];
+				if(!def){
+					const msg = 'Undefined tag "'+name+'"';
+					console.error(msg);
+					Settings.dialog.error(msg);
+					return;
+				}
 				const attrJson = JSON.stringify(parseAttributes(attributes))
 					.replace(/\"/gi, '&quot;');
 
@@ -451,12 +467,12 @@
 						})
 					.end()
 					.find('.btDel').unbind('click').click(function(){
-						if(confirm('Удалить этот тег?')){
+						Settings.dialog.confirmation('Удалить этот тег?').then((ok)=>{if(!ok)return;
 							el.remove();
 							if(opposite) opposite.remove();
 							refresh();
 							close($(this).parent().parent().parent());
-						}
+						}).catch();
 					}).end()
 				;
 			}
@@ -749,8 +765,8 @@
 		}
 	}
 
-	$.fn.fluegel = function(config, docText){
-		const el = $(this)[0];
-		return init($(el), config, docText); 
+	return {
+		init,
+		Settings
 	}
 })(jQuery, Clarino.version('1.1.0'));
