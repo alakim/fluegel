@@ -82,6 +82,15 @@
 							}
 						}
 					},
+					{tag:'ref',
+						label:{text:'Гиперссылка'},
+						description:'Формирует гиперссылки в тексте',
+						attributes:{
+							href:{
+								label:'Целевой URL'
+							}
+						}
+					},
 					{tag:'img', selfClosing:true,
 						label:{text:'Картинка'},
 						description:'Вставляет картинку в текст',
@@ -105,7 +114,14 @@
 					},
 					{tag:'li', 
 						label:{text:'Элемент списка'},
-						description:'Форматирует элемент списка'
+						description:'Форматирует элемент списка',
+						validate: function(node){
+							console.log('validating node: %o', node);
+							// return true;
+							return {
+								error:'Тестовая ошибка валидации'
+							};
+						}
 					},
 					{tag:'ol', label:{text:'Список'}, description:'Форматирует список',
 						attributes:{id:{label:'Идентификатор'}},
@@ -157,6 +173,10 @@
 				console.log('Harvest: %s', res);
 				$('#result').html(res);
 			});
+			$('#btValidate').click(function(){
+				const res = editor.validate();
+				console.log('Validation result: %o', res);
+			});
 		});
 	})(jQuery, Clarino.version('1.1.0'));
 	</script>
@@ -182,6 +202,7 @@
 	</div>
 	<div id="fluegel"></div>
 	<div>
+		<button id="btValidate">Validate</button>
 		<button id="btSave">Save</button>
 	</div>
 	<textarea id="result" readonly></textarea>

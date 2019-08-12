@@ -303,6 +303,9 @@ const Fluegel = (function($, $C){
 					setText(harvest(null, false));
 				}, 20);
 			})
+			// .bind('keyup', function(ev){
+			// 	console.log('keyUp event: %o', ev);
+			// })
 		;
  
 		const reMarker = new regex([
@@ -777,8 +780,28 @@ const Fluegel = (function($, $C){
 			return res.join('').replace(new RegExp(ZWS, 'g'), '');
 		}
 
+		function validate(node = editorPnl.find('.fluegelEditor')[0]){
+			const closing = $(node).attr('data-closing')=='true';
+			// console.log('validate node: %o, closing: %o', node, closing);
+			if(closing) return true;
+			const def = node.tagDef;
+			if(def && def.validate){
+				// console.log('validating node %o by def: %o', node, def);
+				const res = def.validate(node);
+				if(res.error){
+					Settings.dialog.error('Ошибка валидации: '+res.error);
+					return false;
+				}
+			}
+			let totalRes = true;
+			for(let nd of node.childNodes){
+				totalRes = totalRes && validate(nd);
+			}
+			return totalRes;
+		}
+
 		return {
-			harvest: harvest
+			harvest, validate
 		}
 	}
 
