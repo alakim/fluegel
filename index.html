@@ -10,12 +10,18 @@
 	<style>
 		body{
 			font-family: Verdana, Arial, Sans-Serif;
+			background-color:#012;
+			color:#ffe;
 		}
 		.srcFrame{
 			width: 800px;
 			padding: 5px;
 			margin: 10px;
 			border: 1px solid #ccc;
+		}
+		.fluegelEditor{
+			background-color:#fff;
+			color:#000;
 		}
 		#result{
 			width: 800px;
@@ -57,19 +63,19 @@
 				doctype:[
 					{tag:'i', 
 						label:{text:'К', style:'font-style:italic;'},
-						description:'Выделить курсивом'
+						description:'Выделяет фрагмент текста курсивом'
 					},
 					{tag:'b',
 						label:{text:'Ж', style:'font-weight:bold;'},
-						description: 'Выделить жирным шрифтом'
+						description: 'Выделяет фрагмент тектста жирным шрифтом'
 					},
 					{tag:'u',
 						label:{text:'Ч', style:'text-decoration:underline;'},
-						description: 'Выделить подчеркиванием'
+						description: 'Выделяет фрагмент текста подчеркиванием'
 					},
 					{tag:'span',
 						label:{text:'span'},
-						description: 'Фрагмент',
+						description: 'Фрагмент текста',
 						attributes:{
 							id:{
 								label:'Идентификатор'
@@ -78,7 +84,7 @@
 					},
 					{tag:'img', selfClosing:true,
 						label:{text:'Картинка'},
-						description:'Вставить картинку',
+						description:'Вставляет картинку в текст',
 						attributes:{
 							id:{
 								label:'Идентификатор'
@@ -97,7 +103,10 @@
 							return src;
 						}
 					},
-					{tag:'li', label:{text:'Элемент списка'}},
+					{tag:'li', 
+						label:{text:'Элемент списка'},
+						description:'Форматирует элемент списка'
+					},
 					{tag:'ol', label:{text:'Список'}, description:'Форматирует список',
 						attributes:{id:{label:'Идентификатор'}},
 						children:'li'.split(';'),
@@ -134,7 +143,7 @@
 			};
 
 			function createEditor(srcCode){
-				Fluegel.init(
+				return Fluegel.init(
 					$('#fluegel'),
 					config,
 					srcCode

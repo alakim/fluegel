@@ -74,6 +74,7 @@ const Fluegel = (function($, $C){
 				height:px(Settings.size.h - Settings.button.size),
 				overflow: 'scroll',
 				' .marker':{
+					margin:px(0, 3),
 					cursor: css.default
 				}
 			},
@@ -89,6 +90,7 @@ const Fluegel = (function($, $C){
 			top: px(0), left:px(0),
 			width:vw(100), height:vh(100),
 			backgroundColor: Settings.color.dialogShield,
+			color:Settings.color.text,
 			' .dlgBody':{
 				width: px(750),
 				margin: px(30, 'auto'),
@@ -104,7 +106,12 @@ const Fluegel = (function($, $C){
 				},
 				' .dlgContent':{
 					padding: px(10),
-					minHeight: px(200)
+					minHeight: px(200),
+					' table':{
+						' th':{
+							textAlign: css.left
+						}
+					}
 				},
 				' .dlgButtons':{
 					borderTop: $C.css.template.border(1, Settings.color.text),
@@ -161,6 +168,8 @@ const Fluegel = (function($, $C){
 		return regex;
 	})();
 
+	const ZWS = '​';// Zero-width space. Unicode: U+200B, HTML: &#8203;
+
 	function parseAttributes(attributes){
 		const attrJson = {};
 		if(attributes){
@@ -191,13 +200,13 @@ const Fluegel = (function($, $C){
 					.replace(/\"/gi, '&quot;');
 
 				return (closing?'':('<span class="tag_'+name+'">'))
-					+$C.html.canvas({
+					+ZWS+$C.html.canvas({
 						'class':'marker tag_marker_'+name,
 						width:px(sz.w), height: px(sz.h),
 						'data-name':name,
 						'data-closing':closing,
 						'data-attributes':attrJson
-					})
+					})+ZWS
 					+(closing||def.selfClosing?'</span>':'')
 				;
 			},
@@ -429,25 +438,31 @@ const Fluegel = (function($, $C){
 					attributes = {};
 				}
 
+				const {markup,apply,table,tr,th,td,div,span,input} = $H;
+
 				dlg
-					.find('.dlgBody .dlgContent').html((function(){with($H){
-						return table(
-							apply(def.attributes, function(att, nm){
-								return tr(
-									td(att.label),
-									td(
-										input({
-											'class':'tbAttrValue',
-											'data-attrName':nm,
-											type:'text', 
-											value:attributes[nm] || ''
-										})
-									)
-								);
-							})
+					.find('.dlgBody .dlgContent').html((function(){
+						return markup(
+							//div(def.description),
+							table(
+								tr(th('Описание: '), td(def.description)),
+								apply(def.attributes, function(att, nm){
+									return tr(
+										th(att.label),
+										td(
+											input({
+												'class':'tbAttrValue',
+												'data-attrName':nm,
+												type:'text', 
+												value:attributes[nm] || ''
+											})
+										)
+									);
+								})
+							)
 						);
-					}})()).end()
-					.find('.tagName').html(def.description).end()
+					})()).end()
+					.find('.tagName').html(def.label.text).end()
 					.find('.btSave')
 						.unbind('click')
 						.click(function(){
@@ -539,13 +554,15 @@ const Fluegel = (function($, $C){
 				const t1 = txt.slice(0, pos1),
 					t2 = txt.slice(pos1, pos2),
 					t3 = txt.slice(pos2, txt.length);
-				//console.log(t1, t2, t3);
+				//console.log('t1: "%s", t2: "%s", t3: "%s"', t1, t2, t3);
 
 				node.parentNode.insertBefore(document.createTextNode(t1), node);
+				// node.parentNode.insertBefore(document.createTextNode(ZWS), node);
 				const mrk1 = insertMarker(node, name);
-				node.parentNode.insertBefore(document.createTextNode(t2), node);
+				node.parentNode.insertBefore(document.createTextNode(t2.length?t2:ZWS), node);
 				const mrk2 = insertMarker(node, name, true);
 				wrapBetween(mrk1, mrk2, name);
+				// node.parentNode.insertBefore(document.createTextNode(ZWS), node);
 				node.parentNode.insertBefore(document.createTextNode(t3), node);
 				node.parentNode.removeChild(node);
 			}
@@ -757,7 +774,7 @@ const Fluegel = (function($, $C){
 			const res = [];
 			for(let n of node.childNodes) res.push(harvest(n, insertIDs));
 
-			return res.join('');
+			return res.join('').replace(new RegExp(ZWS, 'g'), '');
 		}
 
 		return {
