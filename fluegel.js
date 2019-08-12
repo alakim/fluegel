@@ -1,6 +1,6 @@
 (function($, $C){
 
-	var Settings = {
+	const Settings = {
 		size: {w: 800, h:200},
 		button:{
 			size:30
@@ -21,8 +21,8 @@
 		}
 	};
 
-	var $H = $C.simple;
-	var px = $C.css.unit.px,
+	const $H = $C.simple;
+	const px = $C.css.unit.px,
 		pc = $C.css.unit.pc,
 		vw = $C.css.unit('vw'),
 		vh = $C.css.unit('vh'),
@@ -118,24 +118,24 @@
 		}
 	});
 
-	var uid = (function(){
-		var counter = 1;
+	const uid = (function(){
+		let counter = 1;
 		return function(){
 			return counter++;
 		};
 	})();
 
-	var regex = (function(){
+	const regex = (function(){
 		function regex(parts, flags){
-			var src = [];
-			var groups = [];
-			for(var p,i=0; p=parts[i],i<parts.length; i++){
+			const src = [];
+			const groups = [];
+			for(let p of parts){
 				src.push(p instanceof RegExp?p.source:p)
 				if(p.group_name) groups.push(p.group_name);
 			}
-			var reg = new RegExp(src.join(''), flags);
-			var grpIdx = {};
-			for(var g,i=0; g=groups[i],i<groups.length; i++){
+			const reg = new RegExp(src.join(''), flags);
+			const grpIdx = {};
+			for(let g,i=0; g=groups[i],i<groups.length; i++){
 				grpIdx[g] = i+1;
 			}
 			reg.groups = grpIdx;
@@ -143,7 +143,7 @@
 			return reg;
 		};
 		regex.group = function(name, re, quant){
-			var rrr = new RegExp([
+			const rrr = new RegExp([
 				'(', re.source, ')', quant
 			].join(''));
 			rrr.group_name = name;
@@ -153,10 +153,10 @@
 	})();
 
 	function parseAttributes(attributes){
-		var attrJson = {};
+		const attrJson = {};
 		if(attributes){
-			var mt = attributes.match(/([a-z0-9]+)=((\"([^\"]+)\")|(\'([^\'+])\'))\s*/gi);
-			for(var g,i=0; g=mt[i],i<mt.length; i++){
+			const mt = attributes.match(/([a-z0-9]+)=((\"([^\"]+)\")|(\'([^\'+])\'))\s*/gi);
+			for(let g of mt){
 				g = g.split('=');
 				attrJson[g[0]] = g[1].replace(/^\s*[\"\']/g, '').replace(/[\"\']\s*$/g, '');
 			}
@@ -165,13 +165,13 @@
 	}
 
 	function init(editorPnl, config, docText){
-		var templates = {
+		const templates = {
 			marker: function(name, attributes, closing){
 				closing = !!closing;
 				//console.log(name, closing);
-				var sz = Settings.marker.size;
-				var def = editorPnl.tagsByName[name];
-				var attrJson = JSON.stringify(parseAttributes(attributes))
+				const sz = Settings.marker.size;
+				const def = editorPnl.tagsByName[name];
+				const attrJson = JSON.stringify(parseAttributes(attributes))
 					.replace(/\"/gi, '&quot;');
 
 				return (closing?'':('<span class="tag_'+name+'">'))
@@ -187,20 +187,20 @@
 			},
 			markerDraw: function(el, highlight){
 				if(!el) return;
-				var sz = {}; $C.extend(sz, Settings.marker.size);
-				var name = $(el).attr('data-name'),
+				const sz = {}; $C.extend(sz, Settings.marker.size);
+				const name = $(el).attr('data-name'),
 					closing = $(el).attr('data-closing')=='true',
 					unclosed = $(el).attr('data-unclosed')=='true';
-				var ctx = el.getContext('2d');
-				var label = name;
+				const ctx = el.getContext('2d');
+				let label = name;
 
-				var def = editorPnl.tagsByName[name];
+				const def = editorPnl.tagsByName[name];
 				el.tagDef = def; 
 				console.assert(def, 'No tagDef for %o', el);
 
 				if(def&&def.label) label = def.label.text;
 
-				var lblSize = label.length*Settings.marker.fontSize;
+				const lblSize = label.length*Settings.marker.fontSize;
 				if(lblSize>sz.w-sz.arrow) sz.w = lblSize+sz.arrow;
 
 				el.setAttribute('width', sz.w);
@@ -239,14 +239,14 @@
 		};
 
 		function selectValue(val, command){
-			var el = $('.fluegel .fluegelClipboard textarea')[0];
+			const el = $('.fluegel .fluegelClipboard textarea')[0];
 			el.value = val;
 			el.setAttribute('readonly', '');
 			el.select();
 			el.setSelectionRange(0, el.value.length);
 			el.removeAttribute('readonly');
-			var selectedText = el.value;
-			var successful = document.execCommand(command);
+			const selectedText = el.value;
+			const successful = document.execCommand(command);
 		}
 
 		editorPnl.addClass('fluegel')
@@ -260,13 +260,13 @@
 			}})())
 			.bind('copy', function(ev){
 				ev.stopPropagation();
-				var sel = getCodeSelection();
+				const sel = getCodeSelection();
 				if(!sel) return;
 				selectValue(sel.textInner, 'copy');
 			})
 			.bind('cut', function(ev){
 				ev.stopPropagation();
-				var sel = getCodeSelection();
+				const sel = getCodeSelection();
 				if(!sel) return;
 				selectValue(sel.textInner, 'cut');
 				setText(sel.textBefore+sel.textAfter);
@@ -280,7 +280,7 @@
 			})
 		;
  
-		var reMarker = new regex([
+		const reMarker = new regex([
 			/</,
 			regex.group('closing', /\//, '?'),
 			regex.group('tagName', /[a-z0-9]+/),
@@ -293,7 +293,7 @@
 
 		function insertMarkers(docText){
 			return docText.replace(reMarker, function(){
-				var closing = arguments[reMarker.groups['closing']],
+				const closing = arguments[reMarker.groups['closing']],
 					name = arguments[reMarker.groups['tagName']],
 					attributes = arguments[reMarker.groups['tagAttributes']];
 				return templates.marker(
@@ -305,13 +305,13 @@
 		}
 
 		function refresh(){
-			var res = harvest();
+			const res = harvest();
 			init(editorPnl, config, res);
 		}
 
 		function toggleView(){
-			var labels = ['Code view', 'Markup view'];
-			var txt = $(this).html();
+			const labels = ['Code view', 'Markup view'];
+			const txt = $(this).html();
 			if(txt==labels[0]){
 				$(this).html(labels[1]);
 				editorPnl.find('.fluegelEditor').hide();
@@ -323,7 +323,7 @@
 			}
 			else{
 				$(this).html(labels[0]);
-				var cv = editorPnl.find('.pnlCodeView').hide();
+				const cv = editorPnl.find('.pnlCodeView').hide();
 				editorPnl.find('.pnlTagButtons').fadeIn();
 				editorPnl.find('.fluegelEditor').fadeIn();
 				init(editorPnl, config, cv.val());
@@ -334,7 +334,7 @@
 			if(!config.doctype) return;
 			editorPnl.tagDefinitions = [];
 			editorPnl.tagsByName = {};
-			for(var t,i=0; t=config.doctype[i],i<config.doctype.length; i++){
+			for(let t of config.doctype){
 				t.id = editorPnl.tagDefinitions.length;
 				editorPnl.tagDefinitions.push(t);
 				editorPnl.tagsByName[t.tag] = t;
@@ -381,7 +381,7 @@
 		}
 
 		function setEventHandlers(el){
-			var def = el.tagDef;
+			const def = el.tagDef;
 			console.assert(def, 'No tag definition for %o', el);
 			if(!def) return;
 			$(el).css({cursor:css.pointer}).click(function(){
@@ -390,20 +390,20 @@
 		}
 
 		function openDialog(el){
-			var opposite = el.opposite;
+			let opposite = el.opposite;
 			if(opposite && $(opposite).attr('data-closing')!='true'){
-				var ee = el;
+				const ee = el;
 				el = opposite;
 				opposite = ee;
 			}
-			var def = el.tagDef;
+			const def = el.tagDef;
 			console.assert(def, 'No tag definition for %o', el);
 			if(!def) return;
 
-			var dlgID = 'fluegelAttributeDialog';
+			const dlgID = 'fluegelAttributeDialog';
 
 			function fill(dlg){
-				var attributes = $(el).attr('data-attributes');
+				let attributes = $(el).attr('data-attributes');
 				//console.log(attributes, typeof(attributes), attributes.length);
 				if(attributes){
 					attributes = attributes.replace(/&quot;/gi, '"');
@@ -435,9 +435,9 @@
 					.find('.btSave')
 						.unbind('click')
 						.click(function(){
-							var attrJson = {};
+							let attrJson = {};
 							dlg.find('.tbAttrValue').each(function(i, fld){fld=$(fld);
-								var nm = fld.attr('data-attrName'),
+								const nm = fld.attr('data-attrName'),
 									val = fld.val();
 								attrJson[nm] = val;
 							});
@@ -465,7 +465,7 @@
 				dlg.fadeOut(200);
 			}
 
-			var dlg = $('#'+dlgID);
+			let dlg = $('#'+dlgID);
 			if(!dlg.length){
 				dlg = $((function(){with($H){
 						return div({id:dlgID},
@@ -497,60 +497,61 @@
 		}
 
 		function selectWith(def){
-			var tagName = def.tag,
+			const tagName = def.tag,
 				selfClosing = def.selfClosing;
 
-			var selection = window.getSelection();
+			const selection = window.getSelection();
 			if(!selection.rangeCount) return;
-			var bgn = selection.getRangeAt(0),
+			const bgn = selection.getRangeAt(0),
 				end = selection.getRangeAt(selection.rangeCount-1);
 
 			function insertTag(node, pos, name, closing){
-				var txt = node.nodeValue,
+				const txt = node.nodeValue,
 					txtBefore = txt.slice(0, pos),
 					txtAfter = txt.slice(pos, txt.length);
 
 				node.parentNode.insertBefore(document.createTextNode(txtBefore), node);
-				var mrk = insertMarker(node, name, closing)
+				const mrk = insertMarker(node, name, closing)
 				node.parentNode.insertBefore(document.createTextNode(txtAfter), node);
 				node.parentNode.removeChild(node);
 				$(mrk).wrap($H.span({'class':'tag_'+name}));
 			}
 
 			function insertTagsPair(node, pos1, pos2, name){
-				var txt = node.nodeValue;
+				const txt = node.nodeValue;
 				if(!txt) return;
-				var t1 = txt.slice(0, pos1),
+				const t1 = txt.slice(0, pos1),
 					t2 = txt.slice(pos1, pos2),
 					t3 = txt.slice(pos2, txt.length);
 				//console.log(t1, t2, t3);
 
 				node.parentNode.insertBefore(document.createTextNode(t1), node);
-				var mrk1 = insertMarker(node, name);
+				const mrk1 = insertMarker(node, name);
 				node.parentNode.insertBefore(document.createTextNode(t2), node);
-				var mrk2 = insertMarker(node, name, true);
+				const mrk2 = insertMarker(node, name, true);
 				wrapBetween(mrk1, mrk2, name);
 				node.parentNode.insertBefore(document.createTextNode(t3), node);
 				node.parentNode.removeChild(node);
 			}
 
 			function wrapBetween(m1, m2, name){
-				var tsp = document.createElement('span');
+				const tsp = document.createElement('span');
 				tsp.setAttribute('class','tag_'+name);
 				m1.parentNode.insertBefore(tsp, m1);
-				var coll = [m1], n = m1;
+				const coll = [m1];
+				let n = m1;
 				while(n!=m2){
 					n = n.nextSibling;
 					coll.push(n);
 				}
-				for(var n,i=0; n=coll[i],i<coll.length; i++){
+				for(let n of coll){
 					tsp.appendChild(n);
 				}
 			}
 
 			function insertMarker(node, name, closing){
-				var cnv = document.createElement('canvas');
-				var sz = Settings.marker.size;
+				const cnv = document.createElement('canvas');
+				const sz = Settings.marker.size;
 				cnv.setAttribute('class', 'marker');
 				cnv.setAttribute('width', px(sz.w));
 				cnv.setAttribute('height', px(sz.h));
@@ -600,16 +601,16 @@
 		}
 
 		function setOpposites(){
-			var path = [];
+			const path = [];
 			editorPnl.find('.marker').each(function(i, mrk){mrk=$(mrk);
-				var closed = mrk.attr('data-closed')=='true';
+				const closed = mrk.attr('data-closed')=='true';
 				if(closed) return;
 
-				var nm = mrk.attr('data-name'),
+				const nm = mrk.attr('data-name'),
 					closing = mrk.attr('data-closing')=='true';
 
 				if(closing){
-					var opened = path[path.length-1],
+					const opened = path[path.length-1],
 						oNm = opened.attr('data-name');
 					if(oNm!=nm){
 						console.error('Unclosed tag %s', oNm);
@@ -628,19 +629,15 @@
 		}
 
 		function applyParsers(docText, config){
-			var parsers = [];
+			const parsers = [];
 			function collectParsers(doctype){
-				// for(var tagNm in doctype){
-				for(var tagDef,i=0; tagDef=doctype[i],i<doctype.length; i++){
-					// var tagDef = doctype[tagNm];
+				for(let tagDef of doctype){
 					if(tagDef.parser) parsers.push(tagDef.parser);
 					if(tagDef.children) collectParsers(tagDef.children);
 				}
 			}
 			collectParsers(config.doctype);
-			for(var prs,i=0; prs=parsers[i],i<parsers.length; i++){
-				docText = prs(docText);
-			}
+			for(let prs of parsers) docText = prs(docText);
 			return docText;
 		}
 
@@ -664,26 +661,26 @@
 		}
 
 		function getCodeSelection(){
-			var code = harvest(null, true);
+			const code = harvest(null, true);
 
-			var selection = window.getSelection();
+			const selection = window.getSelection();
 			// console.log(selection.rangeCount);
 			if(selection.rangeCount<1) return;
 
-			var bgn = selection.getRangeAt(0),
+			const bgn = selection.getRangeAt(0),
 				end = selection.getRangeAt(selection.rangeCount-1);
 
 			function getLabel(node){
 				return '#text'+node.fluegelID+';';
 			}
 
-			var startLabel = getLabel(bgn.startContainer),
+			const startLabel = getLabel(bgn.startContainer),
 				endLabel = getLabel(end.endContainer);
 
-			var startPos = code.indexOf(startLabel) + bgn.startOffset + startLabel.length, 
+			const startPos = code.indexOf(startLabel) + bgn.startOffset + startLabel.length, 
 				endPos = code.indexOf(endLabel) + end.endOffset + endLabel.length;
 
-			var txtBefore = code.slice(0, startPos),
+			const txtBefore = code.slice(0, startPos),
 				txtInner = code.slice(startPos, endPos),
 				txtAfter = code.slice(endPos, code.length);
 
@@ -692,7 +689,7 @@
 			}
 			
 
-			var res = {
+			const res = {
 				sourceCode: removeTextIDs(code),
 				textBefore: removeTextIDs(txtBefore),
 				textInner: removeTextIDs(txtInner),
@@ -704,19 +701,18 @@
 
 		function harvest(node, insertIDs){
 			node = node || editorPnl.find('.fluegelEditor')[0];
-			var def = node.tagDef;
+			const def = node.tagDef;
 			switch(node.nodeName){
 				case 'CANVAS':
-					var nd = $(node),
+					const nd = $(node),
 						nm = nd.attr('data-name'),
 						cls = nd.attr('data-closing')=='true';
-					var attr = [];
-					var attrColl = nd.attr('data-attributes');
+					let attr = [];
+					let attrColl = nd.attr('data-attributes');
 					if(attrColl){
 						attrColl = JSON.parse(attrColl.replace(/&quot;/gi, '"'));
-						for(var attNm in attrColl){
-							var val = attrColl[attNm];
-							val = val.replace(/\"/, '\"');
+						for(let attNm in attrColl){
+							const val = attrColl[attNm].replace(/\"/, '\"');
 							attr.push(attNm+'='+'"'+val+'"');
 						}
 					}
@@ -732,7 +728,7 @@
 					].join('');
 				case '#text':
 					if(insertIDs){
-						var id = uid();
+						const id = uid();
 						node.fluegelID = id;
 						return ['#text', id, ';', node.nodeValue].join('');
 					}
@@ -742,10 +738,8 @@
 
 			if(!node.childNodes.length) return node.nodeValue;
 			
-			var res = [];
-			for(var n,i=0; n=node.childNodes[i],i<node.childNodes.length; i++){
-				res.push(harvest(n, insertIDs));
-			}
+			const res = [];
+			for(let n of node.childNodes) res.push(harvest(n, insertIDs));
 
 			return res.join('');
 		}
@@ -756,7 +750,7 @@
 	}
 
 	$.fn.fluegel = function(config, docText){
-		var el = $(this)[0];
+		const el = $(this)[0];
 		return init($(el), config, docText); 
 	}
 })(jQuery, Clarino.version('1.1.0'));
